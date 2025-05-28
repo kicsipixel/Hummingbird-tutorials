@@ -10,4 +10,4 @@
     
 ### Observability
 -  swift-otel
-    - [Tutorial](https://medium.com/@kicsipixel/bridging-swift-on-server-code-and-devops-monitoring-6e29f2ef7b7c) - [Source code]()
+    - [Tutorial](https://medium.com/@kicsipixel/bridging-swift-on-server-code-and-devops-monitoring-6e29f2ef7b7c) - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/swift-otel/parks_of_prague)
