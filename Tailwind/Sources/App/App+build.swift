@@ -1,9 +1,9 @@
+import CSSSetup
 import Configuration
 import Foundation
 import Hummingbird
 import Logging
 import Mustache
-import SwiftKaze
 
 // Request context used by application
 typealias AppRequestContext = BasicRequestContext
@@ -22,17 +22,16 @@ func buildApplication(reader: ConfigReader) async throws -> some ApplicationProt
     let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
     assert(library.getTemplate(named: "base") != nil)
 
-    // SwiftKaze
-    let kaze = SwiftKaze()
+    // Compile CSS
     guard let inputURL = Bundle.module.url(forResource: "app", withExtension: "css") else {
         throw HTTPError(.notFound, message: "File not found.")
     }
     let outputURL = URL(fileURLWithPath: "public/styles/app.css")
 
-    try await kaze.run(
+    try await CSSSetup.compileCSS(
         input: inputURL,
         output: outputURL,
-        in: Bundle.module.bundleURL
+        skipIfNotWritable: true
     )
 
     // Controllers

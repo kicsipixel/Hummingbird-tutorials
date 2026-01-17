@@ -9,3 +9,6 @@ xcuserdata/
 !/.vscode/hummingbird.code-snippets
 .env.*
 .env
+
+# Generated CSS (created by PrepareCSS or at runtime)
+public/styles/
