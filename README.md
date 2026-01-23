@@ -16,4 +16,4 @@
 
 ### Styling
 - Tailwind CSS
-  - [Tutorial]() - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/Tailwind/parks_of_prague)
+  - [Tutorial](https://medium.com/@kicsipixel/meet-swiftkaze-tailwind-css-powered-by-swift-ea5fab8666f5) - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/Tailwind/parks_of_prague)
