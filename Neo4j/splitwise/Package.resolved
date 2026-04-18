@@ -1,5 +1,5 @@
 {
-  "originHash" : "481f9303a3e0427aed5e18651e735a43b36ec70e8b125802673da11d3b38770d",
+  "originHash" : "51f3113928551ba29932b6842fdfb581d22fd357e8c8bc26f1a96d0df430837b",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -222,8 +222,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kicsipixel/SwiftCypher",
       "state" : {
-        "revision" : "589735ba76f65717c24c6fb5a05bf423778f5d14",
-        "version" : "0.3.3"
+        "revision" : "d7bec2d4810de7c1d9e5915d36e81f8d102844e6",
+        "version" : "0.3.4"
       }
     }
   ],

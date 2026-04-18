@@ -21,12 +21,13 @@ func buildApplication(reader: ConfigReader) async throws -> some ApplicationProt
   let isDevelopmentMode = reader.bool(forKey: "DEVELOPMENT", default: true)
   let client: SwiftCypherClient
   if isDevelopmentMode {
-    // Neo4j database
+    // Neo4j local database
     let localUsername = reader.string(forKey: "USERNAME") ?? "neo4j"
     let localPassword = reader.string(forKey: "PASSWORD") ?? "password"
     client = try await SwiftCypherClient.connect(service: .localhost(database: "splitwise"), username: localUsername, password: localPassword)
   }
   else {
+    // Neo4j remote database
     let remoteUsername = reader.string(forKey: "AURA_USERNAME") ?? "neo4j"
     let remotePassword = reader.string(forKey: "AURA_PASSWORD") ?? "password"
     let remoteHost = reader.string(forKey: "AURA_DATABASE") ?? "localhost"
@@ -35,6 +36,8 @@ func buildApplication(reader: ConfigReader) async throws -> some ApplicationProt
 
   // MARK: - Controllers
   FriendsController(client: client, logger: logger).addRoutes(to: router.group("api/v1/friends"))
+  EventsController(client: client, logger: logger).addRoutes(to: router.group("api/v1/events"))
+  ActivitiesController(client: client, logger: logger).addRoutes(to: router.group("api/v1/activities"))
 
   let app = Application(
     router: router,

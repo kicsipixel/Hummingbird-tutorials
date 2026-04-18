@@ -13,7 +13,7 @@ let package = Package(
     .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
     .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: [.defaults, "CommandLineArguments"]),
     // Neo4j database
-    .package(url: "https://github.com/kicsipixel/SwiftCypher", from: "0.3.2"),
+    .package(url: "https://github.com/kicsipixel/SwiftCypher", from: "0.3.4"),
   ],
   targets: [
     .executableTarget(
