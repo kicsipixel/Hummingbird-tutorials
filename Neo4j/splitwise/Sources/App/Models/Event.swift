@@ -33,10 +33,10 @@ struct Event: Codable {
 
 extension Event {
   struct Create: Codable {
-    let name: String
-    let startDateString: String
-    let endDateString: String
-    let description: String
+    let name: String?
+    let startDateString: String?
+    let endDateString: String?
+    let description: String?
 
     enum CodingKeys: String, CodingKey {
       case name
