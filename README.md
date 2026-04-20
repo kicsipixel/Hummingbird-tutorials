@@ -1,5 +1,7 @@
 # Hummingbird tutorials
 
+Complete list of tutorials can be found [here](https://medium.com/@kicsipixel/hummingbird-tutorials-8d0d186e1036)
+
 ### Database
 - SQLite
     - [Tutorial](https://medium.com/@kicsipixel/server-side-swift-with-hummingbird-2-8df2bae41462) - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/SQLite/parks_of_prague)
