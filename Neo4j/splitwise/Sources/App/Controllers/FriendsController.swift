@@ -11,9 +11,9 @@ struct FriendsController<Context: RequestContext> {
     group
       .post(use: create)
       .get(use: index)
-      .get("/:friendID", use: show)
-      .patch("/:friendID", use: edit)
-      .delete("/:friendID", use: delete)
+      .get(":friendID", use: show)
+      .patch(":friendID", use: edit)
+      .delete(":friendID", use: delete)
   }
 
   // MARK: - create
@@ -27,12 +27,12 @@ struct FriendsController<Context: RequestContext> {
   func create(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
     let friend = try await request.decode(as: Friend.Create.self, context: context)
 
-    /// `CREATE (alice:FRIEND {name: 'Alice'})`
+    /// `CREATE (alice:FRIEND {friend_id: $friendID, name: $name})`
     let queryRequest = QueryRequest(
-      statement: "CREATE (n:FRIEND {friendID: $friendID, name: $name})",
+      statement: "CREATE (n:FRIEND {friend_id: $friendID, name: $name})",
       parameters: [
         "friendID": .string(UUID().uuidString),
-        "name": .string("\(friend.name)"),
+        "name": .string(friend.name),
       ]
     )
     _ = try await client.runQuery(request: queryRequest)
@@ -47,12 +47,12 @@ struct FriendsController<Context: RequestContext> {
   func index(_ request: Request, context: Context) async throws -> [Friend] {
     var friends = [Friend]()
 
-    /// `MATCH (n:FRIEND) RETURN n.name`
+    /// `MATCH (n:FRIEND) RETURN n`
     let queryRequest = QueryRequest(statement: "MATCH (n:FRIEND) RETURN n")
     let response = try await client.runQuery(request: queryRequest)
     for row in response.rows {
       if let node = row["n"]?.nodeValue,
-        let friendIdString = node.properties["friendID"]?.stringValue,
+        let friendIdString = node.properties["friend_id"]?.stringValue,
         let friendID = UUID(uuidString: friendIdString),
         let name = node.properties["name"]?.stringValue
       {
@@ -70,18 +70,16 @@ struct FriendsController<Context: RequestContext> {
   func show(_ request: Request, context: Context) async throws -> Friend {
     let friendID = try context.parameters.require("friendID", as: String.self)
 
-    /// `MATCH (n:FRIEND {friendID: '2DB325DC-6884-40EB-8ECB-8695641746DD'}) RETURN n;`
+    /// `MATCH (n:FRIEND {friend_id: '2DB325DC-6884-40EB-8ECB-8695641746DD'}) RETURN n;`
     let queryRequest = QueryRequest(
-      statement: "MATCH (n:FRIEND {friendID: $friendID}) RETURN n",
-      parameters: [
-        "friendID": .string(friendID)
-      ]
+      statement: "MATCH (n:FRIEND {friend_id: $friendID}) RETURN n",
+      parameters: ["friendID": .string(friendID)]
     )
 
     let response = try await client.runQuery(request: queryRequest)
     for row in response.rows {
       if let node = row["n"]?.nodeValue,
-        let friendIdString = node.properties["friendID"]?.stringValue,
+        let friendIdString = node.properties["friend_id"]?.stringValue,
         let friendID = UUID(uuidString: friendIdString),
         let name = node.properties["name"]?.stringValue
       {
@@ -103,9 +101,9 @@ struct FriendsController<Context: RequestContext> {
     let friendID = try context.parameters.require("friendID", as: String.self)
     let newFriend = try await request.decode(as: Friend.Create.self, context: context)
 
-    /// `MATCH (n:FRIEND {friendID: '2DB325DC-6884-40EB-8ECB-8695641746DD'}) SET n.name = 'Emma';`
+    /// `MATCH (n:FRIEND {friend_id: '2DB325DC-6884-40EB-8ECB-8695641746DD'}) SET n.name = 'Emma';`
     let queryRequest = QueryRequest(
-      statement: "MATCH (n:FRIEND {friendID: $friendID}) SET n.name = $newName",
+      statement: "MATCH (n:FRIEND {friend_id: $friendID}) SET n.name = $newName",
       parameters: [
         "friendID": .string(friendID),
         "newName": .string(newFriend.name),
@@ -116,7 +114,10 @@ struct FriendsController<Context: RequestContext> {
     guard response.counters?.propertiesSet ?? 0 > 0 else {
       throw HTTPError(.notFound, message: "The friend with id:\(friendID) was not found")
     }
-    return Friend(friendID: UUID(), name: newFriend.name)
+    guard let friendUUID = UUID(uuidString: friendID) else {
+      throw HTTPError(.badRequest, message: "Invalid friend_id format")
+    }
+    return Friend(friendID: friendUUID, name: newFriend.name)
   }
 
   // MARK: - delete
@@ -126,14 +127,13 @@ struct FriendsController<Context: RequestContext> {
   func delete(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
     let friendID = try context.parameters.require("friendID", as: String.self)
 
-    /// MATCH (n:FRIEND {friendID: '2DB325DC-6884-40EB-8ECB-8695641746DD'}) DETACH DELETE n;
+    /// `MATCH (n:FRIEND {friend_id: '2DB325DC-6884-40EB-8ECB-8695641746DD'}) DETACH DELETE n;`
     let queryRequest = QueryRequest(
-      statement: "MATCH (n:FRIEND {friendID: $friendID}) DETACH DELETE n",
+      statement: "MATCH (n:FRIEND {friend_id: $friendID}) DETACH DELETE n",
       parameters: ["friendID": .string(friendID)]
     )
     let response = try await client.runQuery(request: queryRequest)
 
-    // Check if the database has deleted the node
     guard response.counters?.nodesDeleted ?? 0 > 0 else {
       throw HTTPError(.notFound, message: "The friend with id:\(friendID) was not found")
     }

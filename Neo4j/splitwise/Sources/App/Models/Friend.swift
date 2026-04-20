@@ -4,6 +4,11 @@ import Hummingbird
 struct Friend: Codable {
   let friendID: UUID
   let name: String
+
+  enum CodingKeys: String, CodingKey {
+    case friendID = "friend_id"
+    case name
+  }
 }
 
 extension Friend {

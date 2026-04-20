@@ -11,6 +11,9 @@ struct ActivitiesController<Context: RequestContext> {
     group
       .post(use: create)
       .get(use: index)
+      .get(":activityID", use: show)
+      .patch(":activityID", use: edit)
+      .delete(":activityID", use: delete)
   }
 
   // MARK: - create
@@ -37,7 +40,7 @@ struct ActivitiesController<Context: RequestContext> {
       throw HTTPError(.notFound, message: "\(activity.payer) has not been registered yet.")
     }
 
-    // Check if the participant(s) is/are already resgistered
+    // Check if the participant(s) is/are already registered
     for participant in activity.participants {
       if try await checkIfRegistered(name: participant) == false {
         throw HTTPError(.notFound, message: "\(participant) has not been registered yet.")
@@ -50,8 +53,8 @@ struct ActivitiesController<Context: RequestContext> {
     ///        (charles:FRIEND {name: 'Charles'}),
     ///        (event:EVENT {eventID: '7C448FD5-...'})
     /// CREATE (coffee:ACTIVITY {
-    ///   activityID: '...',
-    ///   name: 'Coffee',
+    ///   activity_id: '...',
+    ///   name: $nameValue,
     ///   date: date('2026-02-02'),
     ///   totalAmount: 25.5,
     ///   currency: 'EUR'
@@ -75,7 +78,7 @@ struct ActivitiesController<Context: RequestContext> {
     var parameters: [String: Neo4jValue] = [
       "activityID": .string(UUID().uuidString),
       "eventID": .string(activity.eventID),
-      "name": .string(activity.name),
+      "nameValue": .string(activity.name),
       "date": .date(activity.dateString),
       "totalAmount": .double(activity.amount),
       "currency": .string(activity.currency),
@@ -86,10 +89,10 @@ struct ActivitiesController<Context: RequestContext> {
 
     let statement = """
       MATCH \(friendMatches),
-            (event:EVENT {eventID: $eventID})
+            (event:EVENT {event_id: $eventID})
       CREATE (activity:ACTIVITY {
-        activityID: $activityID,
-        name: $name,
+        activity_id: $activityID,
+        name: $nameValue,
         date: $date,
         totalAmount: $totalAmount,
         currency: $currency
@@ -111,7 +114,7 @@ struct ActivitiesController<Context: RequestContext> {
   /// ```json
   /// [
   ///   {
-  ///     "activityID": "E86B09EF-76AC-41D8-9D2C-163F30188FBF",
+  ///     "activity_id": "E86B09EF-76AC-41D8-9D2C-163F30188FBF",
   ///     "name": "Coffee",
   ///     "date": "2026-02-02",
   ///     "amount": 25.5,
@@ -130,20 +133,20 @@ struct ActivitiesController<Context: RequestContext> {
     /// MATCH (n:ACTIVITY)-[:BELONGS_TO]->(e:EVENT)
     /// MATCH (payer:FRIEND)-[:PAID_FOR]->(n)
     /// MATCH (participant:FRIEND)-[:PARTICIPATED_IN]->(n)
-    /// RETURN n, e.eventID AS eventID, payer.name AS payerName, collect(participant.name) AS participants
+    /// RETURN n, e.event_id AS eventID, payer.name AS payerName, collect(participant.name) AS participants
     /// ```
     let statement = """
       MATCH (n:ACTIVITY)-[:BELONGS_TO]->(e:EVENT)
       MATCH (payer:FRIEND)-[:PAID_FOR]->(n)
       MATCH (participant:FRIEND)-[:PARTICIPATED_IN]->(n)
-      RETURN n, e.eventID AS eventID, payer.name AS payerName, collect(participant.name) AS participants
+      RETURN n, e.event_id AS eventID, payer.name AS payerName, collect(participant.name) AS participants
       """
     let queryRequest = QueryRequest(statement: statement)
     let response = try await client.runQuery(request: queryRequest)
 
     for row in response.rows {
       if let node = row["n"]?.nodeValue,
-        let activityIdString = node.properties["activityID"]?.stringValue,
+        let activityIdString = node.properties["activity_id"]?.stringValue,
         let activityID = UUID(uuidString: activityIdString),
         let name = node.properties["name"]?.stringValue,
         let dateString = node.properties["date"]?.dateValue,
@@ -172,10 +175,158 @@ struct ActivitiesController<Context: RequestContext> {
     return activities
   }
 
-  // MARK: - Shared function to check that person/people in the user input already registered.
+  // MARK: - show
+  /// `curl "http://localhost:8080/api/v1/activities/E86B09EF-76AC-41D8-9D2C-163F30188FBF"`
+  @Sendable
+  func show(_ request: Request, context: Context) async throws -> Activity {
+    let activityID = try context.parameters.require("activityID", as: String.self)
+
+    /// `MATCH (n:ACTIVITY {activity_id: $activityID})-[:BELONGS_TO]->(e:EVENT)`
+    /// `MATCH (payer:FRIEND)-[:PAID_FOR]->(n)`
+    /// `MATCH (participant:FRIEND)-[:PARTICIPATED_IN]->(n)`
+    /// `RETURN n, e.event_id AS eventID, payer.name AS payerName, collect(participant.name) AS participants`
+    let queryRequest = QueryRequest(
+      statement: """
+        MATCH (n:ACTIVITY {activity_id: $activityID})-[:BELONGS_TO]->(e:EVENT)
+        MATCH (payer:FRIEND)-[:PAID_FOR]->(n)
+        MATCH (participant:FRIEND)-[:PARTICIPATED_IN]->(n)
+        RETURN n, e.event_id AS eventID, payer.name AS payerName, collect(participant.name) AS participants
+        """,
+      parameters: ["activityID": .string(activityID)]
+    )
+
+    let response = try await client.runQuery(request: queryRequest)
+
+    for row in response.rows {
+      if let node = row["n"]?.nodeValue,
+        let activityIdString = node.properties["activity_id"]?.stringValue,
+        let activityID = UUID(uuidString: activityIdString),
+        let name = node.properties["name"]?.stringValue,
+        let dateString = node.properties["date"]?.dateValue,
+        let amount = node.properties["totalAmount"]?.doubleValue,
+        let currency = node.properties["currency"]?.stringValue,
+        let eventIdString = row["eventID"]?.stringValue,
+        let eventID = UUID(uuidString: eventIdString),
+        let payerName = row["payerName"]?.stringValue
+      {
+        let participantNames = row["participants"]?.listValue?.compactMap { $0.stringValue } ?? []
+        return Activity(
+          activityID: activityID,
+          name: name,
+          dateString: dateString,
+          amount: amount,
+          currency: currency,
+          eventID: eventID,
+          payer: payerName,
+          participants: participantNames
+        )
+      }
+    }
+    throw HTTPError(.notFound, message: "Activity with id:\(activityID) was not found.")
+  }
+
+  // MARK: - edit
+  /// `curl -X "PATCH" "http://localhost:8080/api/v1/activities/E86B09EF-76AC-41D8-9D2C-163F30188FBF" \
+  ///       -H 'Content-Type: application/json' \
+  ///       -d $'{"name": "Tea", "amount": 5.0}'`
+  @Sendable
+  func edit(_ request: Request, context: Context) async throws -> Activity {
+    let activityID = try context.parameters.require("activityID", as: String.self)
+    let patch = try await request.decode(as: Activity.Edit.self, context: context)
+
+    // Fetch current activity
+    /// `MATCH (n:ACTIVITY {activity_id: $activityID})-[:BELONGS_TO]->(e:EVENT)`
+    /// `MATCH (payer:FRIEND)-[:PAID_FOR]->(n)`
+    /// `MATCH (participant:FRIEND)-[:PARTICIPATED_IN]->(n)`
+    /// `RETURN n, e.event_id AS eventID, payer.name AS payerName, collect(participant.name) AS participants`
+    let fetchRequest = QueryRequest(
+      statement: """
+        MATCH (n:ACTIVITY {activity_id: $activityID})-[:BELONGS_TO]->(e:EVENT)
+        MATCH (payer:FRIEND)-[:PAID_FOR]->(n)
+        MATCH (participant:FRIEND)-[:PARTICIPATED_IN]->(n)
+        RETURN n, e.event_id AS eventID, payer.name AS payerName, collect(participant.name) AS participants
+        """,
+      parameters: ["activityID": .string(activityID)]
+    )
+    let fetchResponse = try await client.runQuery(request: fetchRequest)
+
+    guard let row = fetchResponse.rows.first,
+      let node = row["n"]?.nodeValue,
+      let originalActivityIdString = node.properties["activity_id"]?.stringValue,
+      let originalActivityID = UUID(uuidString: originalActivityIdString),
+      let originalName = node.properties["name"]?.stringValue,
+      let originalDate = node.properties["date"]?.dateValue,
+      let originalAmount = node.properties["totalAmount"]?.doubleValue,
+      let originalCurrency = node.properties["currency"]?.stringValue,
+      let eventIdString = row["eventID"]?.stringValue,
+      let eventID = UUID(uuidString: eventIdString),
+      let payerName = row["payerName"]?.stringValue
+    else {
+      throw HTTPError(.notFound, message: "Activity with id:\(activityID) was not found.")
+    }
+
+    let participantNames = row["participants"]?.listValue?.compactMap { $0.stringValue } ?? []
+    let updatedName = patch.name ?? originalName
+    let updatedDate = patch.dateString ?? originalDate
+    let updatedAmount = patch.amount ?? originalAmount
+    let updatedCurrency = patch.currency ?? originalCurrency
+
+    /// `MATCH (n:ACTIVITY {activity_id: $activityID})`
+    /// `SET n.name = $nameValue, n.date = date($date), n.totalAmount = $totalAmount, n.currency = $currency`
+    let updateRequest = QueryRequest(
+      statement: "MATCH (n:ACTIVITY {activity_id: $activityID}) SET n.name = $nameValue, n.date = date($date), n.totalAmount = $totalAmount, n.currency = $currency",
+      parameters: [
+        "activityID": .string(activityID),
+        "nameValue": .string(updatedName),
+        "date": .string(updatedDate),
+        "totalAmount": .double(updatedAmount),
+        "currency": .string(updatedCurrency),
+      ]
+    )
+    _ = try await client.runQuery(request: updateRequest)
+
+    return Activity(
+      activityID: originalActivityID,
+      name: updatedName,
+      dateString: updatedDate,
+      amount: updatedAmount,
+      currency: updatedCurrency,
+      eventID: eventID,
+      payer: payerName,
+      participants: participantNames
+    )
+  }
+
+  // MARK: - delete
+  /// `curl -X "DELETE" "http://localhost:8080/api/v1/activities/E86B09EF-76AC-41D8-9D2C-163F30188FBF"`
+  @Sendable
+  func delete(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+    let activityID = try context.parameters.require("activityID", as: String.self)
+
+    /// `MATCH (n:ACTIVITY {activity_id: '...'}) DETACH DELETE n`
+    let queryRequest = QueryRequest(
+      statement: "MATCH (n:ACTIVITY {activity_id: $activityID}) DETACH DELETE n",
+      parameters: ["activityID": .string(activityID)]
+    )
+    let response = try await client.runQuery(request: queryRequest)
+
+    guard response.counters?.nodesDeleted ?? 0 > 0 else {
+      throw HTTPError(.notFound, message: "Activity with id:\(activityID) was not found.")
+    }
+    return .noContent
+  }
+
+  // MARK: - Shared helpers
   private func checkIfRegistered(name: String) async throws -> Bool {
     /// `MATCH (n:FRIEND {name: 'Bob'}) RETURN count(n) > 0 AS exists;`
-    let queryRequest = QueryRequest(statement: "MATCH (n:FRIEND {name: $name}) RETURN count(n) > 0 AS exists", parameters: ["name": .string("\(name)")])
+    let queryRequest = QueryRequest(statement: "MATCH (n:FRIEND {name: $name}) RETURN count(n) > 0 AS exists", parameters: ["name": .string(name)])
+    let response = try await client.runQuery(request: queryRequest)
+    return response.rows.first?["exists"]?.boolValue ?? false
+  }
+
+  private func checkEventExists(eventID: String) async throws -> Bool {
+    /// `MATCH (n:EVENT {event_id: '...'}) RETURN count(n) > 0 AS exists;`
+    let queryRequest = QueryRequest(statement: "MATCH (n:EVENT {event_id: $eventID}) RETURN count(n) > 0 AS exists", parameters: ["eventID": .string(eventID)])
     let response = try await client.runQuery(request: queryRequest)
     return response.rows.first?["exists"]?.boolValue ?? false
   }

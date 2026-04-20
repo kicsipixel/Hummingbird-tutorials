@@ -12,7 +12,7 @@ struct Activity: Codable {
   let participants: [String]
 
   enum CodingKeys: String, CodingKey {
-    case activityID
+    case activityID = "activity_id"
     case name
     case dateString = "date"
     case amount
@@ -41,6 +41,22 @@ extension Activity {
       case eventID = "event_id"
       case payer
       case participants
+    }
+  }
+}
+
+extension Activity {
+  struct Edit: Codable {
+    let name: String?
+    let dateString: String?
+    let amount: Double?
+    let currency: String?
+
+    enum CodingKeys: String, CodingKey {
+      case name
+      case dateString = "date"
+      case amount
+      case currency
     }
   }
 }
