@@ -38,6 +38,7 @@ func buildApplication(reader: ConfigReader) async throws -> some ApplicationProt
   FriendsController(client: client, logger: logger).addRoutes(to: router.group("api/v1/friends"))
   EventsController(client: client, logger: logger).addRoutes(to: router.group("api/v1/events"))
   ActivitiesController(client: client, logger: logger).addRoutes(to: router.group("api/v1/activities"))
+  ObligationsController(client: client, logger: logger).addRoutes(to: router.group("api/v1/obligations"))
 
   let app = Application(
     router: router,

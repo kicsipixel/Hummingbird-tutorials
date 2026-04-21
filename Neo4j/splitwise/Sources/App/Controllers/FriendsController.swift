@@ -133,7 +133,6 @@ struct FriendsController<Context: RequestContext> {
       parameters: ["friendID": .string(friendID)]
     )
     let response = try await client.runQuery(request: queryRequest)
-
     guard response.counters?.nodesDeleted ?? 0 > 0 else {
       throw HTTPError(.notFound, message: "The friend with id:\(friendID) was not found")
     }

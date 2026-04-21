@@ -35,31 +35,18 @@ struct ActivitiesController<Context: RequestContext> {
   func create(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
     let activity = try await request.decode(as: Activity.Create.self, context: context)
 
-    // Check if the payer is already registered
-    if try await checkIfRegistered(name: activity.payer) == false {
-      throw HTTPError(.notFound, message: "\(activity.payer) has not been registered yet.")
-    }
-
-    // Check if the participant(s) is/are already registered
-    for participant in activity.participants {
-      if try await checkIfRegistered(name: participant) == false {
-        throw HTTPError(.notFound, message: "\(participant) has not been registered yet.")
-      }
-    }
-
-    // Create the activity
     /// `MATCH (alice:FRIEND {name: 'Alice'}),
     ///        (bob:FRIEND {name: 'Bob'}),
     ///        (charles:FRIEND {name: 'Charles'}),
-    ///        (event:EVENT {eventID: '7C448FD5-...'})
+    ///        (event:EVENT {event_id: '7C448FD5-...'})
     /// CREATE (coffee:ACTIVITY {
     ///   activity_id: '...',
     ///   name: $nameValue,
-    ///   date: date('2026-02-02'),
-    ///   totalAmount: 25.5,
-    ///   currency: 'EUR'
+    ///   date: $date,
+    ///   totalAmount: $totalAmount,
+    ///   currency: $currency
     /// })
-    /// CREATE (bob)-[:PAID_FOR {amount: 25.5}]->(coffee),
+    /// CREATE (bob)-[:PAID_FOR {amount: $totalAmount}]->(coffee),
     ///        (alice)-[:PARTICIPATED_IN]->(coffee),
     ///        (charles)-[:PARTICIPATED_IN]->(coffee),
     ///        (coffee)-[:BELONGS_TO]->(event)`
@@ -103,7 +90,10 @@ struct ActivitiesController<Context: RequestContext> {
       """
 
     let queryRequest = QueryRequest(statement: statement, parameters: parameters)
-    _ = try await client.runQuery(request: queryRequest)
+    let response = try await client.runQuery(request: queryRequest)
+    guard response.counters?.nodesCreated ?? 0 > 0 else {
+      throw HTTPError(.notFound, message: "One or more friends or the event were not found.")
+    }
 
     return .created
   }
@@ -316,18 +306,4 @@ struct ActivitiesController<Context: RequestContext> {
     return .noContent
   }
 
-  // MARK: - Shared helpers
-  private func checkIfRegistered(name: String) async throws -> Bool {
-    /// `MATCH (n:FRIEND {name: 'Bob'}) RETURN count(n) > 0 AS exists;`
-    let queryRequest = QueryRequest(statement: "MATCH (n:FRIEND {name: $name}) RETURN count(n) > 0 AS exists", parameters: ["name": .string(name)])
-    let response = try await client.runQuery(request: queryRequest)
-    return response.rows.first?["exists"]?.boolValue ?? false
-  }
-
-  private func checkEventExists(eventID: String) async throws -> Bool {
-    /// `MATCH (n:EVENT {event_id: '...'}) RETURN count(n) > 0 AS exists;`
-    let queryRequest = QueryRequest(statement: "MATCH (n:EVENT {event_id: $eventID}) RETURN count(n) > 0 AS exists", parameters: ["eventID": .string(eventID)])
-    let response = try await client.runQuery(request: queryRequest)
-    return response.rows.first?["exists"]?.boolValue ?? false
-  }
 }

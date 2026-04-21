@@ -46,7 +46,13 @@ struct EventsController<Context: RequestContext> {
         "description": .string(event.description),
       ]
     )
-    _ = try await client.runQuery(request: queryRequest)
+    do {
+      _ = try await client.runQuery(request: queryRequest)
+    }
+    catch {
+      logger.error("Neo4j error in EventsController.create: \(error)")
+      throw error
+    }
 
     return .created
   }

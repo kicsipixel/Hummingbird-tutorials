@@ -1,5 +1,5 @@
 {
-  "originHash" : "51f3113928551ba29932b6842fdfb581d22fd357e8c8bc26f1a96d0df430837b",
+  "originHash" : "709e0ec36e35e010de27a6ba1bd7eb8e1976ff58388ac38a039d0da32c56892d",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -132,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-metrics.git",
       "state" : {
-        "revision" : "c6593dac9d65f2517280d88c430dadffdf259737",
-        "version" : "2.10.0"
+        "revision" : "d51c8d13fa366eec807eedb4e37daa60ff5bfdd5",
+        "version" : "2.10.1"
       }
     },
     {
@@ -222,8 +222,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kicsipixel/SwiftCypher",
       "state" : {
-        "revision" : "d7bec2d4810de7c1d9e5915d36e81f8d102844e6",
-        "version" : "0.3.4"
+        "revision" : "0319dbd286ac08008222dee6492c88d3a2d2507c",
+        "version" : "0.4.1"
       }
     }
   ],
