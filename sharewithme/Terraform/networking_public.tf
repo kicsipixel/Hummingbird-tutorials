@@ -81,6 +81,16 @@ resource "oci_core_security_list" "security_list_sharewithme" {
         }
     }
 
+    # HTTPS (TCP 443) from anywhere
+    ingress_security_rules {
+        protocol = "6"
+        source = "0.0.0.0/0"
+        tcp_options {
+            min = 443
+            max = 443
+        }
+    }
+
     # Allow all outbound traffic
     egress_security_rules {
         protocol = "all"
@@ -126,6 +136,24 @@ resource "oci_load_balancer_listener" "listener_sharewithme" {
     default_backend_set_name = oci_load_balancer_backend_set.backend_set_sharewithme.name
     port = 80
     protocol = "HTTP"
+}
+
+#---------------------------------------------------------
+# Load Balancer - Listener (HTTPS)
+#---------------------------------------------------------
+resource "oci_load_balancer_listener" "listener_sharewithme_https" {
+    count = var.tls_certificate_ocid != "" ? 1 : 0
+
+    load_balancer_id = oci_load_balancer_load_balancer.load_balancer_sharewithme.id
+    name = "ShareWithMe_HTTPS_Listener"
+    default_backend_set_name = oci_load_balancer_backend_set.backend_set_sharewithme.name
+    port = 443
+    protocol = "HTTP"
+
+    ssl_configuration {
+        certificate_ids = [var.tls_certificate_ocid]
+        verify_peer_certificate = false
+    }
 }
 
 #---------------------------------------------------------
