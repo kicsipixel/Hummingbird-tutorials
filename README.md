@@ -12,7 +12,7 @@ Complete list of tutorials can be found [here](https://medium.com/@kicsipixel/hu
 - MongoDB
   - [Tutorial](https://medium.com/@kicsipixel/swift-on-server-with-hummingbird-2-086cfccf4fae) - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/MongoDB/parks_of_prague)
 - Neo4j
-  - [Tutorial]() - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/Neo4j/splitwise)
+  - [Tutorial]( ) - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/Neo4j/splitwise)
     
 ### Observability
 -  swift-otel
