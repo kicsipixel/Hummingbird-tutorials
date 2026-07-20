@@ -19,7 +19,7 @@ struct FriendsController<Context: RequestContext> {
   // MARK: - create
   /// Creates a node with label
   /// `curl -X "POST" "http://localhost:8080/api/v1/friends" \
-  ///   -H 'Content-Type: text/plain; charset=utf-8' \
+  ///   -H 'Content-Type: application/json' \
   ///    -d $'{
   ///  "name": "Alice"
   /// }'`
@@ -27,7 +27,7 @@ struct FriendsController<Context: RequestContext> {
   func create(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
     let friend = try await request.decode(as: Friend.Create.self, context: context)
 
-    /// `CREATE (alice:FRIEND {friend_id: $friendID, name: $name})`
+    /// `CREATE (alice:FRIEND {friendID: '0027CBA2-EF9A-497B-AA50-1A4AECA24C8B', name: 'Alice'})`
     let queryRequest = QueryRequest(
       statement: "CREATE (n:FRIEND {friend_id: $friendID, name: $name})",
       parameters: [
