@@ -30,7 +30,7 @@ Date: Wed, 15 Jul 2026 10:00:00 GMT
 Server: sharewithme
 ```
 
-### 🖥️ Web
+### Web
 
 The same upload flow as the API, through a browser form instead of a JSON/binary request.
 
@@ -62,7 +62,6 @@ $ curl -X "POST" "http://localhost:8080/" \
 
 On success, redirects to `/?uploaded=photo.jpg`; on failure, to `/?error=true`. Either way, the PAR URL is remembered in a cookie for 30 days so it doesn't need to be re-entered.
 
-### Objects
 ---
 #### Lists all objects in the bucket defined by the PAR
 ---

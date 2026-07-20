@@ -20,7 +20,7 @@ Complete list of tutorials can be found [here](https://medium.com/@kicsipixel/hu
 
 ### OCI
   - oci-swift-sdk
-    - Tutorial - [Source Code]()
+    - Tutorial - [Source Code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/OCI/sharewithme)
 
 
 ### Styling
