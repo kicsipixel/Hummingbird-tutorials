@@ -1,0 +1,68 @@
+{{<base}}
+{{$body}}
+<!-- Main -->
+<main class="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-16">
+  <div class="w-full max-w-xl">
+
+    <div class="text-center mb-8 flex flex-col items-center gap-3">
+      <span class="inline-flex items-center gap-2 text-xs font-medium px-3 py-1 rounded-full border" style="background: #ffffff; border-color: #e6e0d6; color: #8a827a;"><i class="ph-fill ph-sparkle" style="color: #f2650a;"></i>Share a file in seconds</span>
+      <h1 class="text-3xl font-semibold tracking-tight" style="color: #2b2723;">Send it with <span style="color: #f2650a;">sharewithme</span></h1>
+      <p class="text-[15px] leading-relaxed max-w-md" style="color: #6b6660;">Paste a PAR link and drop your file below. Both are required.</p>
+    </div>
+
+    <!-- Card -->
+    <div class="rounded-2xl bg-white/90 backdrop-blur shadow-xl ring-1 ring-black/5 overflow-hidden">
+      <div class="h-1.5 w-full" style="background: linear-gradient(90deg, #f2650a, #f9a366);"></div>
+      <form method="post" action="/" enctype="multipart/form-data" class="p-7 flex flex-col gap-8">
+
+        <!-- URL input -->
+        <section class="flex flex-col gap-2">
+          <label for="url-input" class="flex items-center gap-1.5 text-[13px] font-medium" style="color: #55504a;"><i class="ph ph-link text-base" style="color: #f2650a;"></i>1. PAR</label>
+          <input id="url-input" name="parURL" type="url" required value="{{#parURL}}{{.}}{{/parURL}}" placeholder="https://objectstorage.<region>.oraclecloud.com/p/<token>/n/<namespace>/b/<bucket>/o/" class="w-full text-[15px] rounded-md outline-none" style="height: 42px; padding: 0 14px; color: #2b2723; background: #ffffff; border: 1px solid #d8d2c8;">
+        </section>
+
+        <!-- File input -->
+        <section class="flex flex-col gap-2">
+          <label for="file-input" class="flex items-center gap-1.5 text-[13px] font-medium" style="color: #55504a;"><i class="ph ph-file-arrow-up text-base" style="color: #f2650a;"></i>2. File</label>
+          <div class="relative">
+            <input id="file-input" name="file" type="file" required class="block w-full rounded-lg cursor-pointer" style="min-height: 160px; background: #fbfaf7; border: 1.5px dashed #cfc8bc;">
+            <div class="absolute inset-0 flex flex-col items-center justify-center gap-2.5 pointer-events-none">
+              <div class="flex items-center justify-center rounded-full" style="width: 48px; height: 48px; background: #fdebdd;">
+                <i class="ph ph-cloud-arrow-up" style="font-size: 26px; color: #f2650a;"></i>
+              </div>
+              <span class="file-empty text-[15px] font-medium" style="color: #3d3833;">Drag and drop a file here</span>
+              <span class="file-empty text-[13px]" style="color: #8f887f;">or click to browse</span>
+              <span class="file-selected text-[15px] font-semibold" style="color: #4c7a5c;">File selected ✓</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Upload -->
+        <section class="flex flex-col gap-2">
+          <button id="upload-button" type="submit" class="flex items-center justify-center gap-2 text-sm font-medium text-white rounded-md cursor-pointer w-full" style="height: 42px; padding: 0 24px; background: #f2650a; border: 1px solid #f2650a;"><i class="ph-bold ph-upload-simple text-sm"></i>Upload</button>
+          {{#uploaded}}
+          <p class="text-[13px] text-center font-semibold" style="color: #4c7a5c;">Uploaded {{.}} ✓</p>
+          {{/uploaded}}
+          {{#error}}
+          <p class="text-[13px] text-center" style="color: #b5483a;">Upload failed. Please try again.</p>
+          {{/error}}
+        </section>
+
+      </form>
+    </div>
+
+    <p class="text-center text-xs mt-5 flex items-center justify-center gap-1.5" style="color: #9a938a;"><i class="ph ph-lock-simple"></i>Encrypted in transit</p>
+
+  </div>
+</main>
+
+<script>
+  const fileInput = document.getElementById("file-input");
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+      document.querySelector(".file-selected").textContent = fileInput.files[0].name + " ✓";
+    }
+  });
+</script>
+{{/body}}
+{{/base}}

@@ -1,0 +1,19 @@
+.DS_Store
+/.build
+/.swiftpm
+/.devContainer
+/Packages
+/*.xcodeproj
+xcuserdata/
+/.vscode/*
+.env.*
+.env
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# Local Claude Code settings
+.claude/settings.local.json
