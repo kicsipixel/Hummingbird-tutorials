@@ -113,3 +113,4 @@ $ curl -X "POST" "http://localhost:8080/api/v1/objects" \
 
 __Return value:__
 - `201 Created`
+
