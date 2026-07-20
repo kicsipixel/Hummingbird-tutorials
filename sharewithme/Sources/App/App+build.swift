@@ -24,7 +24,7 @@ func buildApplication(reader: ConfigReader) async throws -> some ApplicationProt
     let router = try buildRouter()
 
     // OCIKit setup
-    let region = Region.from(regionId: "eu-frankfurt-1")
+    let region = Region.from(regionId: reader.string(forKey: "oci.region", default: "eu-frankfurt-1"))
     let signer = try InstancePrincipalSigner()
     let objectStorageClient = try ObjectStorageClient(region: region, signer: signer)
 

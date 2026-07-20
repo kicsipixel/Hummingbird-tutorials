@@ -20,6 +20,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          env:
+            - name: OCI_REGION
+              value: "eu-frankfurt-1"
 ---
 apiVersion: v1
 kind: Service
