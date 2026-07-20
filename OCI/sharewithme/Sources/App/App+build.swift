@@ -7,7 +7,7 @@ import OCIKit
 
 /// App version and info
 enum AppInfo {
-    static let version = "0.2.4"
+    static let version = "0.2.5"
 }
 
 // Request context used by application
@@ -21,7 +21,7 @@ func buildApplication(reader: ConfigReader) async throws -> some ApplicationProt
         logger.logLevel = reader.string(forKey: "log.level", as: Logger.Level.self, default: .info)
         return logger
     }()
-    let router = try buildRouter()
+    let router = try buildRouter(logger: logger)
 
     // OCIKit setup
     let region = Region.from(regionId: reader.string(forKey: "oci.region", default: "eu-frankfurt-1"))
@@ -45,7 +45,7 @@ func buildApplication(reader: ConfigReader) async throws -> some ApplicationProt
 }
 
 /// Build router
-func buildRouter() throws -> Router<AppRequestContext> {
+func buildRouter(logger: Logger) throws -> Router<AppRequestContext> {
     let router = Router(context: AppRequestContext.self)
     // Add middleware
     router.addMiddleware {
@@ -56,12 +56,14 @@ func buildRouter() throws -> Router<AppRequestContext> {
 
     // Add health endpoint
     router.get("/health") { _, _ -> HTTPResponse.Status in
-        .ok
+        logger.info("[sharewithme] - The server is up and running")
+        return .ok
     }
 
     // Add version endpoint
     router.get("/version") { _, _ -> String in
-        AppInfo.version
+        logger.info("[sharewithme] - The app version is: \(AppInfo.version).")
+        return AppInfo.version
     }
 
     return router
