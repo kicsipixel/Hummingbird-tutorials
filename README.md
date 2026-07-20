@@ -18,6 +18,11 @@ Complete list of tutorials can be found [here](https://medium.com/@kicsipixel/hu
 -  swift-otel
     - [Tutorial](https://medium.com/@kicsipixel/bridging-swift-on-server-code-and-devops-monitoring-6e29f2ef7b7c) - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/swift-otel/parks_of_prague)
 
+### OCI
+  - oci-swift-sdk
+    - Tutorial - [Source Code]()
+
+
 ### Styling
 - Tailwind CSS
   - [Tutorial](https://medium.com/@kicsipixel/meet-swiftkaze-tailwind-css-powered-by-swift-ea5fab8666f5) - [Source code](https://github.com/kicsipixel/Hummingbird-tutorials/tree/main/Tailwind/parks_of_prague)
